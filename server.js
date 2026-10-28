@@ -25,8 +25,10 @@ function roomId(value) {
   return /^[a-z0-9-]{3,32}$/.test(id) ? id : null;
 }
 function getRoom(id) {
-  if (!rooms.has(id)) rooms.set(id, { users: new Map(), messages: [] });
-  return rooms.get(id);
+  if (!rooms.has(id)) rooms.set(id, { users: new Map(), messages: [], callUsers: new Map() });
+  const room = rooms.get(id);
+  if (!room.callUsers) room.callUsers = new Map();
+  return room;
 }
 function limited(socket, event, max = 8, windowMs = 5000) {
   const key = `${socket.id}:${event}`;
@@ -40,12 +42,21 @@ function limited(socket, event, max = 8, windowMs = 5000) {
 function userList(room) {
   return [...room.users.values()].map(u => ({ id: u.id, name: u.name, color: u.color }));
 }
+function callUserList(room) {
+  return [...room.callUsers.values()].map(u => ({ id: u.id, name: u.name, color: u.color }));
+}
 function leaveRoom(socket) {
   const id = socket.data.room;
   if (!id) return;
   const room = rooms.get(id);
   if (room) {
+    const wasInCall = room.callUsers.has(socket.id);
+    room.callUsers.delete(socket.id);
     room.users.delete(socket.id);
+    if (wasInCall) {
+      socket.to(id).emit('call-user-left', { id: socket.id, users: callUserList(room) });
+      io.to(id).emit('call-users', callUserList(room));
+    }
     socket.to(id).emit('user-left', { id: socket.id });
     io.to(id).emit('users', userList(room));
     if (room.users.size === 0) rooms.delete(id);
@@ -85,6 +96,32 @@ io.on('connection', socket => {
     room.messages.push(message);
     room.messages = room.messages.slice(-200);
     io.to(id).emit('chat-message', message);
+  });
+
+  // Voice call membership is separate from being present in the text room.
+  socket.on('call-join', (cb = () => {}) => {
+    const id = socket.data.room;
+    if (!id || !rooms.has(id)) return cb({ ok: false, error: 'Entre em uma sala antes de iniciar a chamada.' });
+    const room = rooms.get(id);
+    const user = room.users.get(socket.id);
+    if (!user) return cb({ ok: false, error: 'Sua sessão da sala expirou. Entre novamente.' });
+    if (!room.callUsers.has(socket.id)) {
+      room.callUsers.set(socket.id, user);
+      socket.data.inCall = true;
+      socket.to(id).emit('call-user-joined', user);
+      io.to(id).emit('call-users', callUserList(room));
+    }
+    cb({ ok: true, users: callUserList(room) });
+  });
+  socket.on('call-leave', () => {
+    const id = socket.data.room;
+    if (!id || !rooms.has(id)) return;
+    const room = rooms.get(id);
+    if (!room.callUsers.has(socket.id)) return;
+    room.callUsers.delete(socket.id);
+    socket.data.inCall = false;
+    socket.to(id).emit('call-user-left', { id: socket.id, users: callUserList(room) });
+    io.to(id).emit('call-users', callUserList(room));
   });
 
   // WebRTC signaling only: audio/video/screen media travels peer-to-peer, not through this server.
