@@ -16,3 +16,5 @@
 .fullscreen-button:hover { background:#49265d; }
 .remote-tile:fullscreen, .screen-preview:fullscreen { width:100vw !important; height:100vh !important; max-height:none !important; background:#08060a !important; display:flex; flex-direction:column; justify-content:center; }
 .remote-tile:fullscreen video, .screen-preview:fullscreen video { width:100% !important; height:100% !important; max-height:none !important; object-fit:contain; }
+
+.call-join.connected{background:linear-gradient(100deg,#2e8c68,#236c53);box-shadow:0 8px 22px #2e8c6825}.call-join.connected:hover{filter:brightness(1.08)}.remote-tile:fullscreen{right:auto!important;bottom:auto!important;width:100vw!important;height:100vh!important;border-radius:0!important}.remote-tile:fullscreen video{max-height:none!important;height:calc(100vh - 42px)!important}
