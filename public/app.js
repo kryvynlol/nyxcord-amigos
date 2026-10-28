@@ -77,7 +77,7 @@
   socket.on('history', messages => { $('chat').replaceChildren(); for (const msg of messages) addMessage(msg); if (!messages.length) { const w = document.createElement('div'); w.className='welcome'; w.id='welcome'; w.innerHTML='<div class="welcome-glyph">✦</div><p class="eyebrow">VOCÊ ENCONTROU SEU LUGAR</p><h2>Bem-vinde ao <em>geral.</em></h2><p>As melhores conversas começam com um “oi”.<br>Chame sua galera e faça a noite durar.</p>'; $('chat').append(w); } });
   socket.on('chat-message', addMessage);
   socket.on('users', renderUsers);
-  socket.on('user-joined', user => { if (callJoined && user.id !== myId) makeOffer(user.id); toast(`${user.name} chegou à sala.`); });
+  socket.on('user-joined', user => { if (callJoined && user.id !== myId && myId < user.id) makeOffer(user.id); toast(`${user.name} chegou à sala.`); });
   socket.on('user-left', ({ id }) => { closePeer(id); });
   $('joinForm').addEventListener('submit', e => { e.preventDefault(); joinRoom($('nameInput').value, $('roomInput').value); });
   $('chatForm').addEventListener('submit', e => { e.preventDefault(); const input = $('messageInput'); const text = input.value.trim(); if (!text) return; if (!currentRoom) return toast('Entre em uma sala primeiro.'); socket.emit('chat-message', { text }); input.value = ''; input.focus(); });
@@ -103,6 +103,13 @@
     renderCallPeople(); toast(muted ? 'Microfone silenciado.' : 'Microfone ativado.');
   });
   $('screenButton').addEventListener('click', shareScreen);
+  $('fullscreenScreen').addEventListener('click', async () => {
+    const target = $('screenPreview');
+    if (!screenStream) return toast('Compartilhe sua tela primeiro.');
+    try { if (document.fullscreenElement) await document.exitFullscreen(); else await target.requestFullscreen(); }
+    catch { toast('Seu navegador não permitiu abrir em tela cheia.'); }
+  });
+  document.addEventListener('fullscreenchange', () => { $('fullscreenScreen').textContent = document.fullscreenElement ? '⛶ Sair da tela cheia' : '⛶ Tela cheia'; });
   $('shareScreen').addEventListener('click', () => callJoined ? shareScreen() : toast('Entre na chamada antes de compartilhar a tela.'));
   async function joinCall() {
     if (!currentRoom) return toast('Entre em uma sala primeiro.');
@@ -116,10 +123,10 @@
       $('callHeadline').textContent = 'Você está conectado.';
       $('callDescription').textContent = 'Sua voz está pronta. Compartilhe sua tela quando quiser.';
       $('callCount').textContent = users.length; renderCallPeople();
-      for (const u of users) if (u.id !== myId) makeOffer(u.id);
+      for (const u of users) if (u.id !== myId && myId < u.id) makeOffer(u.id);
       toast('Você entrou na chamada de voz.');
     } catch (err) {
-      toast(err.name === 'NotAllowedError' ? 'Permita o acesso ao microfone no navegador.' : 'Não foi possível acessar o microfone. Verifique as permissões.');
+      toast(err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError' ? 'Microfone bloqueado. Clique no cadeado ao lado do endereço do site e permita o microfone.' : err.name === 'NotFoundError' ? 'Não encontrei um microfone conectado.' : 'Não foi possível acessar o microfone. Confira as permissões do navegador e se outro app está usando o dispositivo.');
     }
   }
   function getPeer(id) {
@@ -182,11 +189,23 @@
     let tile = document.getElementById(`remote-${id}`);
     if (!tile) {
       tile = document.createElement('div'); tile.id = `remote-${id}`; tile.className = 'remote-tile';
-      tile.style.cssText = 'position:fixed;right:18px;bottom:18px;width:min(320px,40vw);z-index:5;background:#100b16;border:1px solid #8f50b8;border-radius:12px;overflow:hidden;box-shadow:0 12px 40px #0009';
-      const video = document.createElement('video'); video.autoplay = true; video.playsInline = true; video.style.cssText = 'width:100%;max-height:220px;display:block;background:#08060a';
-      const label = document.createElement('div'); label.textContent = users.find(u => u.id === id)?.name || 'participante'; label.style.cssText = 'padding:8px 10px;font-size:11px;color:#e8d6f3';
-      tile.append(video, label); document.body.append(tile); tile.querySelector('video').srcObject = stream;
-    } else tile.querySelector('video').srcObject = stream;
+      tile.style.cssText = 'position:fixed;right:18px;bottom:18px;width:min(360px,45vw);z-index:5;background:#100b16;border:1px solid #8f50b8;border-radius:12px;overflow:hidden;box-shadow:0 12px 40px #0009';
+      const video = document.createElement('video'); video.autoplay = true; video.playsInline = true; video.muted = true;
+      video.style.cssText = 'width:100%;max-height:240px;display:block;background:#08060a';
+      const audio = document.createElement('audio'); audio.autoplay = true; audio.playsInline = true;
+      audio.style.display = 'none';
+      const label = document.createElement('div'); label.style.cssText = 'padding:8px 10px;font-size:11px;color:#e8d6f3;display:flex;justify-content:space-between;align-items:center;gap:8px';
+      const name = document.createElement('span'); name.textContent = users.find(u => u.id === id)?.name || 'participante';
+      const fullscreen = document.createElement('button'); fullscreen.type = 'button'; fullscreen.className = 'fullscreen-button'; fullscreen.textContent = '⛶ Tela cheia'; fullscreen.addEventListener('click', async () => {
+        try { if (document.fullscreenElement === tile) await document.exitFullscreen(); else await tile.requestFullscreen(); }
+        catch { toast('Não foi possível abrir a transmissão em tela cheia.'); }
+      });
+      label.append(name, fullscreen); tile.append(video, audio, label); document.body.append(tile);
+    }
+    const video = tile.querySelector('video'); const audio = tile.querySelector('audio');
+    video.srcObject = stream; audio.srcObject = stream;
+    video.hidden = !stream.getVideoTracks().some(track => track.readyState === 'live');
+    video.play().catch(() => {}); audio.play().catch(() => toast('Clique na página para permitir o áudio da chamada.'));
   }
   function closePeer(id) {
     const pc = peers.get(id); if (pc) { pc.ontrack = null; pc.close(); peers.delete(id); }

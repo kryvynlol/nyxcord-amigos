@@ -9,3 +9,10 @@
 @keyframes appear{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:1100px){.app-shell{grid-template-columns:62px 205px minmax(280px,1fr)}.call-panel{display:none}.sidebar .workspace{padding:22px 16px}.topbar{padding:0 18px}}
 @media(max-width:650px){.app-shell{grid-template-columns:55px minmax(0,1fr);min-height:0}.rail{grid-row:1;grid-column:1}.sidebar{grid-row:1;grid-column:2;border-right:0}.sidebar .workspace{padding:13px 15px;border-bottom:0}.workspace .eyebrow,.workspace .sub,.room-heading,.channel,.members-head,.member-list{display:none}.workspace h1{font-size:21px;margin:0}.profile{position:absolute;bottom:0;left:55px;right:0;display:none}.main{grid-column:2;grid-row:2;height:calc(100dvh - 65px);border-top:1px solid var(--line)}.app-shell{grid-template-rows:65px minmax(0,1fr)}.topbar{height:62px;padding:0 12px}.secure-tag{display:none}.chat{padding:20px 13px}.composer{margin:0 10px 10px;gap:7px}.footnote{font-size:8px}.join-card{padding:27px}.welcome h2{font-size:26px}}
+
+/* Controles extras de compartilhamento */
+.preview-label { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.fullscreen-button { margin-left:auto; border:1px solid #8f50b8; border-radius:7px; padding:5px 9px; color:#f4eaff; background:#25152f; font:inherit; cursor:pointer; }
+.fullscreen-button:hover { background:#49265d; }
+.remote-tile:fullscreen, .screen-preview:fullscreen { width:100vw !important; height:100vh !important; max-height:none !important; background:#08060a !important; display:flex; flex-direction:column; justify-content:center; }
+.remote-tile:fullscreen video, .screen-preview:fullscreen video { width:100% !important; height:100% !important; max-height:none !important; object-fit:contain; }
