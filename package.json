@@ -1,0 +1,15 @@
+{
+  "name": "nyxcord",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Aplicativo de comunicação web emo preto e roxo com chat, salas e compartilhamento de tela via WebRTC",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  }
+}

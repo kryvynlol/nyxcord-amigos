@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#100b16">
+  <title>Nyxcord — seu canto da noite</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="rail">
+      <div class="brand-mark" title="Nyxcord">N<span>✦</span></div>
+      <button class="server-orb active" title="Nyxcord">N</button>
+      <button class="server-orb add" id="copyInvite" title="Copiar link desta sala">+</button>
+      <div class="rail-bottom">✦</div>
+    </aside>
+    <aside class="sidebar">
+      <div class="workspace">
+        <div class="eyebrow">SEU REFÚGIO DIGITAL</div>
+        <h1>nyxcord<span>.</span></h1>
+        <p class="sub">um lugar depois da meia-noite</p>
+      </div>
+      <div class="room-heading"><span>CANAIS</span><button id="newRoom" title="Trocar sala">＋</button></div>
+      <button class="channel selected" id="textChannel"><span>#</span> geral</button>
+      <button class="channel" id="voiceChannel"><span>◖</span> sala de voz <i id="voiceStatus">●</i></button>
+      <div class="members-head">NA ESCURIDÃO <span id="memberCount">0</span></div>
+      <div id="memberList" class="member-list"><div class="empty-members">a sala está quieta...</div></div>
+      <div class="profile">
+        <div class="avatar" id="myAvatar">?</div>
+        <div class="profile-info"><strong id="myName">visitante</strong><small><span class="online-dot"></span> online</small></div>
+        <button id="editName" title="Alterar nome">✎</button>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="channel-title"><span class="hash">#</span><div><strong id="roomTitle">geral</strong><small>converse sem medo de ser estranho</small></div></div>
+        <div class="top-actions">
+          <span class="secure-tag"><span class="online-dot"></span> <b id="connectionStatus">conectando</b></span>
+          <button class="icon-button" id="inviteButton" title="Copiar convite">↗</button>
+          <button class="icon-button" id="themeButton" title="Alternar brilho">☾</button>
+        </div>
+      </header>
+      <section class="chat" id="chat" aria-live="polite">
+        <div class="welcome" id="welcome">
+          <div class="welcome-glyph">✦</div>
+          <p class="eyebrow">VOCÊ ENCONTROU SEU LUGAR</p>
+          <h2>Bem-vinde ao <em>geral.</em></h2>
+          <p>As melhores conversas começam com um “oi”.<br>Chame sua galera e faça a noite durar.</p>
+        </div>
+      </section>
+      <form class="composer" id="chatForm">
+        <button type="button" class="plus-button" id="shareScreen" title="Compartilhar tela">▣</button>
+        <input id="messageInput" maxlength="1000" autocomplete="off" placeholder="Escreva algo no vazio..." aria-label="Mensagem">
+        <button class="send-button" type="submit" title="Enviar mensagem">➤</button>
+      </form>
+      <footer class="footnote"><span>✦</span> seja gentil. todo mundo está lutando suas próprias batalhas.</footer>
+    </main>
+    <aside class="call-panel">
+      <div class="call-top"><div><span class="eyebrow">AO VIVO</span><h2>Conexão noturna</h2></div><span class="live-dot"></span></div>
+      <div class="call-stage" id="callStage">
+        <div class="call-illustration"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="moon">☾</div><span class="spark s1">✦</span><span class="spark s2">✧</span></div>
+        <strong id="callHeadline">Sua noite, sua galera.</strong>
+        <p id="callDescription">Entre na chamada para conversar por voz ou compartilhar sua tela.</p>
+      </div>
+      <div class="screen-preview" id="screenPreview" hidden>
+        <video id="screenVideo" autoplay playsinline muted></video>
+        <div class="preview-label"><span class="live-dot"></span> sua tela está sendo compartilhada</div>
+      </div>
+      <div class="call-count"><span>PARTICIPANTES</span><b id="callCount">0</b></div>
+      <div id="callParticipants" class="call-participants"><p class="empty-call">ninguém na chamada ainda</p></div>
+      <div class="call-controls">
+        <button id="joinCall" class="call-join"><span>◖</span> Entrar na chamada</button>
+        <div class="control-row">
+          <button id="muteButton" class="round-control" title="Microfone" disabled>♩</button>
+          <button id="screenButton" class="round-control" title="Compartilhar tela" disabled>▣</button>
+          <button id="leaveCall" class="round-control danger" title="Sair da chamada" disabled>×</button>
+        </div>
+      </div>
+      <p class="call-note">Áudio e tela usam WebRTC. Permita o microfone e a captura de tela quando o navegador pedir.</p>
+    </aside>
+  </div>
+  <div class="modal-backdrop" id="joinModal">
+    <form class="join-card" id="joinForm">
+      <div class="brand-mark big">N<span>✦</span></div>
+      <p class="eyebrow">UM LUGAR SÓ SEU</p>
+      <h2>Entre na <em>noite.</em></h2>
+      <p class="modal-copy">Escolha um nome e uma sala para encontrar sua galera.</p>
+      <label for="nameInput">SEU NOME</label>
+      <input id="nameInput" maxlength="24" placeholder="ex.: raven.exe" required>
+      <label for="roomInput">CÓDIGO DA SALA</label>
+      <input id="roomInput" maxlength="32" pattern="[A-Za-z0-9-]{3,32}" placeholder="ex.: madrugada" required>
+      <button type="submit" class="primary-button">Entrar no Nyxcord <span>→</span></button>
+      <small>Compartilhe o mesmo código com seus amigos.</small>
+    </form>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
